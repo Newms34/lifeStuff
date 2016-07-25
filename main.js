@@ -175,11 +175,8 @@ function createField() {
             }
             document.querySelector('#p' + n).style.top = parts[n].y + 'px';
             document.querySelector('#p' + n).style.transform = 'translateZ(-' + parts[n].y + 'px)';
-            if (parts[n].newBornTimer) {
-                document.querySelector('#p' + n).style.backgroundColor = 'rgb(0,0,0)';
-            } else {
-                document.querySelector('#p' + n).style.backgroundColor = 'hsl(' + parts[n].hue + ',100%,50%)';
-            }
+            document.querySelector('#p' + n).style.backgroundColor = 'hsl(' + parts[n].hue + ',100%,50%)';
+
             document.querySelector('#sp' + n).style.left = parts[n].x + 'px';
             document.querySelector('#sp' + n).style.top = parts[n].z + 'px';
             var gloAmt = 2 + (5 * parts[n].intTime / 50);
@@ -195,8 +192,10 @@ function createField() {
                 document.querySelector('#p' + n).innerHTML = '\uD83D\uDC80';
                 gloBase = (1 - (parts[n].intTime / 50)) * 5;
             } else if (parts[n].intTime > 1 && parts[n].lastInt == 'mate') {
+                document.querySelector('#p' + n).innerHTML = '\u2661';
+            } else if(parts[n].newBornTimer){
                 document.querySelector('#p' + n).innerHTML = '\uD83D\uDEBC';
-            } else {
+            }else {
                 document.querySelector('#p' + n).innerHTML = ' ';
                 document.querySelector('#p' + n).style.borderRadius = '50%';
                 document.querySelector('#sp' + n).style.borderRadius = '50%';
@@ -288,14 +287,14 @@ var setupBox = function() {
     for (var i = 0; i < cylRes; i++) {
         var newCylSeg = document.createElement('div');
         newCylSeg.className = 'mouseCylSeg';
-        newCylSeg.style.width = .4+((cylRot / 360) * 2 * Math.PI * 25) + 'px';
+        newCylSeg.style.width = .4 + ((cylRot / 360) * 2 * Math.PI * 25) + 'px';
         newCylSeg.style.transform = 'rotateX(90deg) rotateY(' + (cylRot * i) + 'deg) translateZ(25px) translateY(0px)';
         newCylSeg.style.top = '0px';
         newCylSeg.style.left = '0px';
         newCylSeg.style.height = 100 + 'px';
         var obrite = (Math.sin((i + (cylRes / 4)) / 5) * 15) + 50,
-            nbrite = (Math.sin((i+1 + (cylRes / 4)) / 5) * 15) + 50;
-        console.log(obrite,nbrite)
+            nbrite = (Math.sin((i + 1 + (cylRes / 4)) / 5) * 15) + 50;
+        console.log(obrite, nbrite)
         newCylSeg.style.background = 'linear-gradient(hsl(0,0%,' + obrite + '%),hsl(0,0%,' + nbrite + '%))';
         $('#cyl').append(newCylSeg);
     }
