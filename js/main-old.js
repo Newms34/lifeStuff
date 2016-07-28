@@ -1,3 +1,5 @@
+//this is the old version, without 'species'. It's basically just a flocking sim.
+//not that flocking interesting
 var maxDist = 65,
     minDist = 15,
     numPars,
@@ -253,33 +255,33 @@ var setupBox = function() {
     $('#b-left').css({
         'width': d + 'px',
         'height': h + 'px',
-        'background-image': 'linear-gradient(hsla(0,0%,' + (Math.floor(Math.random() * 50) + 40) + '%,.5),hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5)), url("wood.jpg")',
+        'background-image': 'linear-gradient(hsla(0,0%,' + (Math.floor(Math.random() * 50) + 40) + '%,.5),hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5)), url("./img/wood.jpg")',
         'transform': 'rotateY(90deg) translateZ(-' + (d / 2) + 'px) translateX(' + (d / 2) + 'px)'
     });
     $('#b-right').css({
         'width': d + 'px',
         'height': h + 'px',
-        'background-image': 'linear-gradient(hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5),hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5)), url("wood.jpg")',
+        'background-image': 'linear-gradient(hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5),hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5)), url("./img/wood.jpg")',
         'transform': 'rotateY(90deg) translateZ(' + (d / 2) + 'px) translateX(' + (d / 2) + 'px)'
     });
     $('#b-top').css({
         'width': w + 'px',
         'height': d + 'px',
-        'background-image': 'linear-gradient(hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5),hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5)), url("wood.jpg")',
+        'background-image': 'linear-gradient(hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5),hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5)), url("./img/wood.jpg")',
         'transform': 'rotateX(90deg) translateZ(' + (d / 2) + 'px) translateY(-' + (d / 2) + 'px)'
     });
     $('#b-back').css({
         'width': w + 'px',
         'height': h + 'px',
-        'background-image': 'linear-gradient(hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5),hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5)), url("wood.jpg")',
+        'background-image': 'linear-gradient(hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5),hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5)), url("./img/wood.jpg")',
         'transform': 'translateZ(-' + (d) + 'px)',
         'transform-style': 'preserve-3d'
     });
     $('#b-bottom').css({
         'width': w + 'px',
         'height': d + 'px',
-        'background-image': 'linear-gradient(hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5),hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5)), url("wood.jpg")',
-        'transform': 'rotateX(90deg) translateZ(' + (0) + 'px) translateY(-' + (d / 2) + 'px)',
+        'background-image': 'linear-gradient(hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5),hsla(0,0%,' + (Math.floor(Math.random() * 50) + 25) + '%,.5)), url("./img/wood.jpg")',
+        'transform': 'rotateX(90deg) translateZ(' + (30) + 'px) translateY(-' + (d / 2) + 'px)',
         'overflow': 'hidden'
     });
     //now, the targetting cylinder

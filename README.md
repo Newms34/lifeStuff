@@ -5,13 +5,14 @@
  - [Description](#description)
  - [Rules](#rules)
  - [Use](#use)
+ - [Upcoming Features](#upcoming-features)
  - [Credits](#credits)
 
 ##Description
 
-This is a (very simple!) ecology simulation involving intraspecific competition (and reproduction). It's written entirely in vanilla JS, so just sit back and watch. Or mess with the settings.
+This is a (very simple!) flocking. It's written entirely in vanilla JS, so just sit back and watch. Or mess with the settings.
 
-##Rules
+##Rules (old version)
 
 The rules are comparatively simple, but are as follows:
 
@@ -25,7 +26,11 @@ The rules are comparatively simple, but are as follows:
 
 ##Use
 
-Just open index.html. If you wanna try playing with the settings a bit, change minDist and maxDist in main.js. I'd suggest you specify between 70 and 600 particles.
+Just open indexOld.html. If you wanna try playing with the settings a bit, change minDist and maxDist in main.js. I'd suggest you specify between 70 and 600 particles.
+
+##Upcoming Features
+
+You might notice a file called 'index.html'. That's the basis for a new module, involving ecology simulations. I'm not going to release it until I have a full simulation of basic ecological principles.
 
 ##Credits
 
