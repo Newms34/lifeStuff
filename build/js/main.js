@@ -246,28 +246,28 @@ var setupBox = function() {
     $('#b-left').css({
         'width': d + 'px',
         'height': h + 'px',
-        'background-image': 'url("./img/skySide.jpg")',
+        'background-image': 'url("./img/skyside.jpg")',
         'background-size': '100% 100%',
         'transform': 'rotateY(90deg) translateZ(-' + (d / 2) + 'px) translateX(' + (d / 2) + 'px)'
     });
     $('#b-right').css({
         'width': d + 'px',
         'height': h + 'px',
-        'background-image': 'url("./img/skySide.jpg")',
+        'background-image': 'url("./img/skyside.jpg")',
         'background-size': '100% 100%',
         'transform': 'rotateY(90deg) translateZ(' + (d / 2) + 'px) translateX(' + (d / 2) + 'px)'
     });
     $('#b-top').css({
         'width': w + 'px',
         'height': d + 'px',
-        'background-image': 'url("./img/skyTop.jpg")',
+        'background-image': 'url("./img/skytop.jpg")',
         'background-size': '100% 100%',
         'transform': 'rotateX(90deg) translateZ(' + (d / 2) + 'px) translateY(-' + (d / 2) + 'px)'
     });
     $('#b-back').css({
         'width': w + 'px',
         'height': h + 'px',
-        'background-image': 'url("./img/skySide.jpg")',
+        'background-image': 'url("./img/skyside.jpg")',
         'background-size': '100% 100%',
         'transform': 'translateZ(-' + (d) + 'px)',
         'transform-style': 'preserve-3d'
