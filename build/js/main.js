@@ -55,7 +55,7 @@ var orgConst = function(x, y, z, spec, type, sex) {
         dy: 1,
         dz: type == 'prod' ? 0 : 1,
     };
-    this.hp = 100;
+    this.hp = 300;
     this.id = Math.floor(Math.random() * 9999999999999).toString(32); //generate a random id for this org for tracking
     this.type = type;
     this.spec = spec;
@@ -184,23 +184,23 @@ orgConst.prototype.pickMode = function() {
 var die = function(n) {
     //kill org. Remove from list of orgs (objs), and element from DOM. Also, run thur other orgs, left-shift ones AFTER this org, and redo targs (so no one is targetting an invalid targ)
     //this function is run for EVERY organism with hp <= 0 at every tick
-    console.log(orgs[n],'died!');
+    console.log(orgs[n], 'died!');
     var theId = orgs[n].id;
-    orgs.splice(n,1);
+    orgs.splice(n, 1);
     var orgDivs = $('.one-org');
-    for (var r=0;r<orgDivs.length;r++){
-        console.log('LOOKING TO DELETE',n);
-        if(orgDivs[r].id == theId){
+    for (var r = 0; r < orgDivs.length; r++) {
+        console.log('LOOKING TO DELETE', n);
+        if (orgDivs[r].id == theId) {
             $(orgDivs[r]).remove();
             break;
         }
     }
-    for(var i=0;i<orgs.length;i++){
-        console.log('LOOKING TO DELETE',n);
-        if (orgs[i].targ==n){
+    for (var i = 0; i < orgs.length; i++) {
+        console.log('LOOKING TO DELETE', n);
+        if (orgs[i].targ == n) {
             //if this organism's target was the old organism, give it a new target
             orgs[i].pickNewTarg();
-        }else if (orgs[i].targ>n){
+        } else if (orgs[i].targ > n) {
             //if the number of this org is greater than the organism, left shift them by one (since we've removed one item from the list, it's 1 shorter)
             orgs[i].targ--;
         }
@@ -208,11 +208,13 @@ var die = function(n) {
 };
 var birth = function(f, m) {
     //make a new org from Father and Mother
-    var newBeast = new orgConst(f.x, f.y, f.z, f.spec, f.type, Math.floor(Math.random() * 2) + 1);
+    var zee = m ? f.z : h; //if mother is not defined, this is a plant, and thus 'lives' only on the bottom of the screen.
+    var newBeast = new orgConst(f.x, f.y, zee, f.spec, f.type, Math.floor(Math.random() * 2) + 1);
     orgs.push(newBeast);
     var newOrgDiv = document.createElement('div');
+    var gend = newBeast.sex == 1 ? '♂' : '♀';
     newOrgDiv.className = 'one-org';
-    newOrgDiv.innerHTML = orgStats[newBeast.spec].img;
+    newOrgDiv.innerHTML = orgStats[newBeast.spec].img + gend;
     newOrgDiv.style.left = x + 'px';
     newOrgDiv.style.top = y + 'px';
     newOrgDiv.style.transform = 'translateZ(' + z + 'px)';
@@ -259,14 +261,16 @@ var step = function() {
             }
         }
         //hunger and lastMate
-        if (orgs[i].hunger < 100) {
-            orgs[i].hunger++;
-        } else {
-            //starvation!
-            orgs[i].hp--;
-        }
-        if (orgs[i].lastMate < 100) {
-            orgs[i].lastMate++;
+        if (orgs[i].type!='prod'){
+            if (orgs[i].hunger < 100) {
+                orgs[i].hunger++;
+            } else {
+                //starvation!
+                orgs[i].hp--;
+            }
+            if (orgs[i].lastMate < 100) {
+                orgs[i].lastMate++;
+            }
         }
         //movement!
         if (orgs[i].type != 'prod') {
@@ -310,10 +314,10 @@ var step = function() {
                 orgs[i].pos.z += orgs[i].vel.dz;
                 //now move the div!
                 // console.log($('#'+orgs[i].id))
-                $('#'+orgs[i].id).css({
-                    'left':orgs[i].pos.x+'px',
-                    'top':orgs[i].pos.y+'px',
-                    'transform':'translateZ('+orgs[i].pos.z+'px)'
+                $('#' + orgs[i].id).css({
+                    'left': orgs[i].pos.x + 'px',
+                    'top': orgs[i].pos.y + 'px',
+                    'transform': 'translateZ(' + orgs[i].pos.z + 'px)'
                 });
                 // $('#'+orgs[i].id).html(JSON.stringify(orgs[i]))
             } else {
@@ -331,8 +335,10 @@ var step = function() {
                 //else near a plant, but not 'hungry', so pick new targ
                 orgs[i].pickNewTarg();
             }
-        } else {
+        } else if (Math.random() > 0.99) {
             //plants have their own behaviors, since they do not target and they do not mate.
+            //note that we completely bypass the mating fn here.
+            birth(orgs[i], null);
         }
     }
     itNum++;
@@ -394,9 +400,9 @@ var setupBox = function() {
     });
     //now, the targetting cylinder
 };
-window.onkeyup = function(e){
+window.onkeyup = function(e) {
     //emergency stop button: press 's' to stop the iteration timer.
-    if(e.which==83){
+    if (e.which == 83) {
         clearInterval(mainTimer);
     }
 };

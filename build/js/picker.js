@@ -89,8 +89,9 @@ var app = angular.module('pickerApp', []).controller('pik-cont', function($scope
                 orgs.push(newBeastie);
                 //now create the div el!
                 var newOrgDiv = document.createElement('div');
+                var gend = newBeastie.sex==1?'♂':'♀';
                 newOrgDiv.className = 'one-org';
-                newOrgDiv.innerHTML = $scope.orgs[t].img;
+                newOrgDiv.innerHTML = $scope.orgs[t].img+gend;
                 newOrgDiv.style.left = x + 'px';
                 newOrgDiv.style.top = y + 'px';
                 newOrgDiv.style.transform = 'translateZ(' + z + 'px)';
