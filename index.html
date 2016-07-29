@@ -11,41 +11,59 @@
 <body>
     <div class='switchBtn' onclick='window.location.assign("oldIndex.html")'>&leftarrow; Old Version!</div>
     <div class='frontin offset-md-3'>
-        <div class='panel panel-success col-md-6' style='padding:2px;left:20%;max-height:95%;' ng-app='pickerApp' ng-controller='pik-cont' ng-show='pikActive'>
+        <div class='panel panel-success col-md-8' style='padding:2px;left:10%;max-height:95%;' ng-app='pickerApp' ng-controller='pik-cont' ng-show='pikActive'>
             <div class='panel-heading center'>
                 <h2>Customize Your Ecosystem</h2>
             </div>
             <div class='panel-body' style='max-height: 80vh;overflow-y:scroll;'>
-                <h4>Organism Statistics</h4>
-                <table class='table table-striped'>
-                    <thead>
-                        <tr>
-                            <th>Icon</th>
-                            <th>Name</th>
-                            <th>Gestation Time (days)</th>
-                            <th>Time to Sexual Maturity (weeks)</th>
-                            <th>Type</th>
-                            <th>Eats</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr ng-repeat='o in orgs'>
-                            <td style='font-size:x-large'>{{o.img}}</td>
-                            <td>{{o.name}}</td>
-                            <td>{{o.gestation}}</td>
-                            <td>{{o.timeToMature}}</td>
-                            <td>{{o.type|typeViewer}}</td>
-                            <td style='cursor:pointer;' ng-click='o.active?o.active=false:o.active=true;'>{{o.active==false?'Click to Toggle':''}}
-                            <table ng-show='o.active==true && o.eats!="prod"'>
-                                <tr ng-repeat='food in o.eats track by $index'>
-                                    <td>{{food}}</td>
-                                </tr>
-                            </table>
-                            <span ng-show='o.active && o.eats=="prod"'>(This organism is a primary producer)</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <form>
+                    <h4>Organism Statistics</h4>
+                    <table class='table table-striped' style='display:block;overflow:scroll;max-height: 40vh'>
+                        <thead>
+                            <tr>
+                                <th>Icon</th>
+                                <th>Name</th>
+                                <th>Number to Include</th>
+                                <th>Gestation Time (days)</th>
+                                <th>Time to Sexual Maturity (weeks)</th>
+                                <th>Type</th>
+                                <th>Eats</th>
+                                <th>&nbsp;</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat='o in orgs'>
+                                <td style='font-size:x-large' ng-style='o.quant>0?{"color":"black"}:{"color":"grey"};'>{{o.img}}</td>
+                                <td>{{o.name}}</td>
+                                <th>
+                                    <input type='number' min='0' max='500' ng-model='o.quant' ng-change='checkOrgValid(o)'>
+                                </th>
+                                <td>{{o.gestation}}</td>
+                                <td>{{o.timeToMature}}</td>
+                                <td>{{o.type|typeViewer}}</td>
+                                <td style='cursor:pointer;' ng-click='o.active?o.active=false:o.active=true;'>{{o.active==false?'Click to Toggle':''}}
+                                    <table ng-show='o.active==true && o.eats!="prod"'>
+                                        <tr ng-repeat='food in o.eats track by $index'>
+                                            <td>{{food}}</td>
+                                        </tr>
+                                    </table>
+                                    <span ng-show='o.active && o.eats=="prod"'>(This organism is a primary producer)</span>
+                                </td>
+                                <td>
+                                    <div ng-show='o.warns.pairs==true' class='bg-danger'>Warning: There are not enough members of the {{o.name}} species to form mating pairs!</div>
+                                    <br/>
+                                    <div ng-show='o.warns.snaks==true' class='bg-danger'>Warning: The {{o.name}} species does not have any available food organisms! This means it <em>will</em> starve!</div>&nbsp;</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <hr/>
+                    <div class='col-md-6 center'>
+                        <button class='btn btn-primary' ng-click='makeWorld();' type='submit'>Make It So!</button>
+                    </div>
+                    <div class='col-md-6 center pull-right'>
+                        <button class='btn btn-danger' ng-click='resetNums();' type='button'>Reset!</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -54,10 +72,8 @@
         <div class='box-part' id='b-right'></div>
         <div class='box-part' id='b-top'></div>
         <div class='box-part' id='b-back'>
-            <div id='cyl'></div>
         </div>
         <div class='box-part' id='b-bottom'>
-            <!-- <div id='cylShad'></div>    -->
         </div>
     </div>
     <div id='mouseTarg'>

@@ -48,12 +48,12 @@ var orgConst = function(x, y, z, spec, type, sex) {
     this.pos = {
         x: x,
         y: y,
-        z: type=='prod'?h:z
+        z: type == 'prod' ? h : z
     };
     this.vel = {
         dx: 1,
         dy: 1,
-        dz: type=='prod'?0:1,
+        dz: type == 'prod' ? 0 : 1,
     };
     this.hp = 100;
     this.id = Math.floor(Math.random() * 9999999999999).toString(32); //generate a random id for this org for tracking
@@ -101,7 +101,7 @@ orgConst.prototype.pred = function() {
     this.pickNewTarg();
 };
 orgConst.prototype.mate = function() {
-    if (Math.random() > .1 && getDist(this, orgs[this.targ]) < this.vis && this.hp && this.sex == 1 && orgs[this.targ].mode == 'mate' && orgs[this.targ].sex == 2 && orgs[this.targ].hp && orgs[this.targ].spec == this.spec) {
+    if (Math.random() > 0.1 && getDist(this, orgs[this.targ]) < this.vis && this.hp && this.sex == 1 && orgs[this.targ].mode == 'mate' && orgs[this.targ].sex == 2 && orgs[this.targ].hp && orgs[this.targ].spec == this.spec) {
         //close enough, this and targ are alive, this and targ are same species, both are in mate mode, this is male, and targ is female
         //the math.rand part above introduces a random failure factor
         console.log(this.spec, this.id, 'mated with', orgs[this.targ].spec, orgs[this.targ].id);
@@ -140,7 +140,7 @@ orgConst.prototype.pickNewTarg = function() {
     //pick a target
     this.targ = Math.floor(Math.random() * orgs.length);
     var validMatch = false;
-    while (orgs[this.targ].id == this.id || (orgs[this.targ].type = 'prod' && this.type == 'carni') && validMatch) {
+    while (orgs[this.targ].id == this.id || (orgs[this.targ].type == 'prod' && this.type == 'carni') && validMatch) {
         //keep repicking until we have a legitimate match:
         //must not be the same organism (cannot target self), and predators do not interact with plants
         //note that we DONT need to check if the reverse is true (this is plant and target is pred), since plants dont have targets
@@ -184,10 +184,40 @@ orgConst.prototype.pickMode = function() {
 var die = function(n) {
     //kill org. Remove from list of orgs (objs), and element from DOM. Also, run thur other orgs, left-shift ones AFTER this org, and redo targs (so no one is targetting an invalid targ)
     //this function is run for EVERY organism with hp <= 0 at every tick
+    console.log(orgs[n],'died!');
+    var theId = orgs[n].id;
+    orgs.splice(n,1);
+    var orgDivs = $('.one-org');
+    for (var r=0;r<orgDivs.length;r++){
+        console.log('LOOKING TO DELETE',n);
+        if(orgDivs[r].id == theId){
+            $(orgDivs[r]).remove();
+            break;
+        }
+    }
+    for(var i=0;i<orgs.length;i++){
+        console.log('LOOKING TO DELETE',n);
+        if (orgs[i].targ==n){
+            //if this organism's target was the old organism, give it a new target
+            orgs[i].pickNewTarg();
+        }else if (orgs[i].targ>n){
+            //if the number of this org is greater than the organism, left shift them by one (since we've removed one item from the list, it's 1 shorter)
+            orgs[i].targ--;
+        }
+    }
 };
 var birth = function(f, m) {
     //make a new org from Father and Mother
-    orgs.push(new orgConst(f.x, f.y, f.z, f.spec, f.type, Math.floor(Math.random() * 2) + 1));
+    var newBeast = new orgConst(f.x, f.y, f.z, f.spec, f.type, Math.floor(Math.random() * 2) + 1);
+    orgs.push(newBeast);
+    var newOrgDiv = document.createElement('div');
+    newOrgDiv.className = 'one-org';
+    newOrgDiv.innerHTML = orgStats[newBeast.spec].img;
+    newOrgDiv.style.left = x + 'px';
+    newOrgDiv.style.top = y + 'px';
+    newOrgDiv.style.transform = 'translateZ(' + z + 'px)';
+    newOrgDiv.id = newBeastie.id;
+    $('#field').append(newOrgDiv);
 };
 //get dist btwn two orgs
 var getDist = function(o, t) {
@@ -208,11 +238,13 @@ var getDist = function(o, t) {
 var step = function() {
     //MAIN STEPPER FUNCTION. AAAAAAAAAAAH;
     var numOrgs = orgs.length;
-    for (var i = 0; i < orgs.length; i++) {
+    for (var i = 0; i < numOrgs; i++) {
         //death
         if (orgs[i].hp < 1) {
             die(i);
-            continue;
+            numOrgs--;
+            i--;
+            // continue;
         }
         //mode and target
         if (orgs[i].mode == 'none' && !orgs[i].coolDown && !orgs[i].matureTime) {
@@ -238,7 +270,7 @@ var step = function() {
         }
         //movement!
         if (orgs[i].type != 'prod') {
-            if (getDist(orgs[i], orgs[orgs[i].targ]) > orgs[i].vis || !orgs[i].targ) {
+            if (!orgs[i].targ || getDist(orgs[i], orgs[orgs[i].targ]) > orgs[i].vis) {
                 //too far to fight/pred/mate, so move
                 //first, check pos of target.
                 if (orgs[i].targ) {
@@ -263,19 +295,27 @@ var step = function() {
                 }
                 //next, boundaries
                 if ((orgs[i].pos.x + orgs[i].vel.dx) > w || (orgs[i].pos.x + orgs[i].vel.dx) < 0) {
-                    orgs[i].vel.dx = -1 * orgs[i].vel.dx
+                    orgs[i].vel.dx = -1 * orgs[i].vel.dx;
                 }
 
                 if ((orgs[i].pos.y + orgs[i].vel.dy) > h || (orgs[i].pos.y + orgs[i].vel.dy) < 0) {
-                    orgs[i].vel.dy = -1 * orgs[i].vel.dy
+                    orgs[i].vel.dy = -1 * orgs[i].vel.dy;
                 }
 
                 if ((orgs[i].pos.z + orgs[i].vel.dz) > d || (orgs[i].pos.z + orgs[i].vel.dz) < 0) {
-                    orgs[i].vel.dz = -1 * orgs[i].vel.dz
+                    orgs[i].vel.dz = -1 * orgs[i].vel.dz;
                 }
-                orgs[i].pos.x += orgs[i].dx;
-                orgs[i].pos.y += orgs[i].dy;
-                orgs[i].pos.z += orgs[i].dz;
+                orgs[i].pos.x += orgs[i].vel.dx;
+                orgs[i].pos.y += orgs[i].vel.dy;
+                orgs[i].pos.z += orgs[i].vel.dz;
+                //now move the div!
+                // console.log($('#'+orgs[i].id))
+                $('#'+orgs[i].id).css({
+                    'left':orgs[i].pos.x+'px',
+                    'top':orgs[i].pos.y+'px',
+                    'transform':'translateZ('+orgs[i].pos.z+'px)'
+                });
+                // $('#'+orgs[i].id).html(JSON.stringify(orgs[i]))
             } else {
                 //close enough for interaction
                 if (orgs[i].mode == 'pred') {
@@ -288,14 +328,16 @@ var step = function() {
                 } else if (orgs[i].mode == 'wander' && orgs[orgs[i].targ].type != 'prod') {
                     orgs[i].fight();
                 }
-                //else do nothing (near a plant, but not 'hungry')
+                //else near a plant, but not 'hungry', so pick new targ
+                orgs[i].pickNewTarg();
             }
         } else {
             //plants have their own behaviors, since they do not target and they do not mate.
         }
     }
     itNum++;
-    console.log('iteration number:', itNum)
+    console.log(orgs[0].pos);
+    // console.log('iteration number:', itNum,'world pop:',orgs.length);
 };
 
 var mainTimer; //main timer. Srsly, I'm not mincing variable names here, folks.
@@ -306,11 +348,11 @@ var startMe = function() {
     step();
     var endTime = new Date().getTime();
     timeDelta = (endTime - startTime) > 50 ? (endTime - startTime) : 50;
-    console.log('frame rate: 1 frame every', timeDelta, 'ms.')
+    console.log('frame rate: 1 frame every', timeDelta, 'ms.');
     mainTimer = setInterval(function() {
         step();
     }, timeDelta * 1.5);
-}
+};
 
 var setupBox = function() {
     var v = 80;
@@ -351,5 +393,11 @@ var setupBox = function() {
         'overflow': 'hidden'
     });
     //now, the targetting cylinder
+};
+window.onkeyup = function(e){
+    //emergency stop button: press 's' to stop the iteration timer.
+    if(e.which==83){
+        clearInterval(mainTimer);
+    }
 };
 setupBox();

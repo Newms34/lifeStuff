@@ -120,3 +120,16 @@ body {
     width:100%;
     height:100%;
 }
+.bg-danger::before{
+    content:'! ';
+    font-size:xx-large;
+    font-weight:bold;
+}
+.center{
+    text-align:center;
+}
+.one-org{
+    position:absolute;
+    width:5px;
+    height:5px;
+}
