@@ -39,34 +39,36 @@ var maxNum = 100;
 var orgs = [],
     w = $(window).width() - 10,
     h = $(window).height() - 10,
-    d = w; //all orgs
+    d = w,
+    timeDelta,
+    itNum = 0; //all orgs
 
 //constructor
 var orgConst = function(x, y, z, spec, type, sex) {
     this.pos = {
         x: x,
         y: y,
-        z: z
+        z: type=='prod'?h:z
     };
     this.vel = {
         dx: 1,
         dy: 1,
-        dz: 1,
+        dz: type=='prod'?0:1,
     };
     this.hp = 100;
     this.id = Math.floor(Math.random() * 9999999999999).toString(32); //generate a random id for this org for tracking
     this.type = type;
     this.spec = spec;
-    this.eats = getMenu(spec);
+    this.eats = fl[this.spec];
     this.sex = sex; //1 = male, 2 = female
     this.vis = 10; //may make this dynamic later. Basically, the distance within which an org must be befroe it can see (and thus use a fn on) its target
     this.targ = null; //stored as array pos of target
     this.isDef = 50;
-    this.matureTime = 100;
+    this.matureTime = orgStats[this.spec].timeToMature;
     this.mode = 'none';
     this.coolDown = 0; //set to 100 after pred or mate event. Forces org to wait before another 'activity'. when it reaches 0, choose mode pred or mode mate.
     this.lastMate = 0;
-    this.mateTimerMax = 100; //this will be made dynamic later (for R-selection vs. K-selection). It determines the period between matings (max)
+    this.mateTimerMax = orgStats[this.spec].gestation; //this will be made dynamic later (for R-selection vs. K-selection). It determines the period between matings (max)
     this.hunger = 0; //if this reaches 100, it no longer increases (can be lowered obvsly), but instead subtracts 0.5 from HP per turn (due to starvation)
 };
 orgConst.prototype.pred = function() {
@@ -86,26 +88,28 @@ orgConst.prototype.pred = function() {
         } else {
             //no kill! roll for pred dmg
             rollChance = orgs[this.targ].isDef ? 3 : 20; //if org is defended, 1 in 3 chance of injury. Else, 1 in 20.
-            if (Math.floor(Math.random() * rollChance) < 1) {
+            if (Math.floor(Math.random() * rollChance) < 1 && orgs[this.targ].type != 'prod') {
                 //attack backfired! Remove 18pts of hp.
+                //note that plants cannot defend
                 this.hp -= 18;
             }
             console.log(this.spec, this.id, 'attempted to prey on', orgs[this.targ].spec, orgs[this.targ].id, 'but failed!');
         }
     }
     this.mode = 'none';
-    this.coolDown=100;
+    this.coolDown = 100;
     this.pickNewTarg();
 };
 orgConst.prototype.mate = function() {
-    if (Math.random()>.1 && getDist(this, orgs[this.targ]) < this.vis && this.hp && this.sex == 1 && orgs[this.targ].mode == 'mate' && orgs[this.targ].sex == 2 && orgs[this.targ].hp && orgs[this.targ].spec == this.spec) {
+    if (Math.random() > .1 && getDist(this, orgs[this.targ]) < this.vis && this.hp && this.sex == 1 && orgs[this.targ].mode == 'mate' && orgs[this.targ].sex == 2 && orgs[this.targ].hp && orgs[this.targ].spec == this.spec) {
         //close enough, this and targ are alive, this and targ are same species, both are in mate mode, this is male, and targ is female
         //the math.rand part above introduces a random failure factor
         console.log(this.spec, this.id, 'mated with', orgs[this.targ].spec, orgs[this.targ].id);
         birth(this, orgs[this.targ]);
+        return 'b';
     }
     this.mode = 'none';
-    this.coolDown=100;
+    this.coolDown = 100;
     this.pickNewTarg();
 };
 orgConst.prototype.fight = function() {
@@ -129,7 +133,7 @@ orgConst.prototype.fight = function() {
         }
     }
     this.mode = 'none';
-    this.coolDown=100;
+    this.coolDown = 100;
     this.pickNewTarg();
 };
 orgConst.prototype.pickNewTarg = function() {
@@ -154,36 +158,35 @@ orgConst.prototype.pickNewTarg = function() {
 orgConst.prototype.pickMode = function() {
     //this method picks the mode of the target, depending on how hungry the organism is and how recently its mated
     //hunger first:
-    this.mode='wander';//default to mode 'wander' if nothing else. In this mode, org seeks a random target to fight with it.
-    if ((this.hunger / 100) > (this.lastMate / this.mateTimerMax)) {
-        if (Math.random() < this.hunger / 100) {
-            //in other words, the hungrier this is, the more likely it is to pick pred mode
-            this.mode = 'pred';
-        } else if (Math.random() > (this.lastMate / this.mateTimerMax)) {
-            this.mode = 'mate';
+    this.mode = 'wander'; //default to mode 'wander' if nothing else. In this mode, org seeks a random target to fight with it.
+    if (!this.matureTime || this.matureTime < 1) {
+        //make sure organism is sexually mature
+        if ((this.hunger / 100) > (this.lastMate / this.mateTimerMax)) {
+            if (Math.random() < this.hunger / 100) {
+                //in other words, the hungrier this is, the more likely it is to pick pred mode
+                this.mode = 'pred';
+            } else if (Math.random() > (this.lastMate / this.mateTimerMax)) {
+                this.mode = 'mate';
+            }
+        } else {
+            //mate first
+            if (Math.random() > (this.lastMate / this.mateTimerMax)) {
+                //in other words, the hungrier this is, the more likely it is to pick pred mode
+                this.mode = 'mate';
+            } else if (Math.random() > this.hunger / 100) {
+                this.mode = 'pred';
+            }
         }
-    }else{
-        //mate first
-        if (Math.random() > (this.lastMate / this.mateTimerMax)) {
-            //in other words, the hungrier this is, the more likely it is to pick pred mode
-            this.mode = 'mate';
-        } else if (Math.random() > this.hunger/100) {
-            this.mode = 'pred';
-        }
+    } else if (Math.random() > this.hunger / 100) {
+        this.mode = 'pred';
     }
 };
 var die = function(n) {
     //kill org. Remove from list of orgs (objs), and element from DOM. Also, run thur other orgs, left-shift ones AFTER this org, and redo targs (so no one is targetting an invalid targ)
     //this function is run for EVERY organism with hp <= 0 at every tick
 };
-var getMenu = function(s) {
-    //get what this org eats
-    var specArr = fl[s];
-    return specArr;
-};
 var birth = function(f, m) {
     //make a new org from Father and Mother
-
     orgs.push(new orgConst(f.x, f.y, f.z, f.spec, f.type, Math.floor(Math.random() * 2) + 1));
 };
 //get dist btwn two orgs
@@ -195,51 +198,119 @@ var getDist = function(o, t) {
 };
 
 //TESTING STUFF-------------
-var testP = new orgConst(2, 3, 4, 'monkey', 'omni', 1);
-var testH = new orgConst(3, 2, 4, 'mouse', 'omni', 1);
-testP.targ = 1;
-orgs.push(testP, testH);
-console.log(testP, testH);
+// var testP = new orgConst(2, 3, 4, 'monkey', 'omni', 1);
+// var testH = new orgConst(3, 2, 4, 'mouse', 'omni', 1);
+// testP.targ = 1;
+// orgs.push(testP, testH);
+// console.log(testP, testH);
 //END TESTING STUFF---------
 
-var step = function (){
+var step = function() {
     //MAIN STEPPER FUNCTION. AAAAAAAAAAAH;
-    for (var i=0;i<orgs.length;i++){
+    var numOrgs = orgs.length;
+    for (var i = 0; i < orgs.length; i++) {
         //death
-        if(org[i].hp<1){
+        if (orgs[i].hp < 1) {
             die(i);
             continue;
         }
         //mode and target
-        if(org[i].mode=='none' && !org[i].coolDown && !org[i].matureTime){
-            org[i].pickMode();
-            org[i].pickNewTarg();
-        }else if (org[i].coolDown>0 || org[i].matureTime>0){
-            if(org[i].coolDown && org[i].coolDown>0){
-                org[i].coolDown--;
+        if (orgs[i].mode == 'none' && !orgs[i].coolDown && !orgs[i].matureTime) {
+            orgs[i].pickMode();
+            orgs[i].pickNewTarg();
+        } else if (orgs[i].coolDown > 0 || orgs[i].matureTime > 0) {
+            if (orgs[i].coolDown && orgs[i].coolDown > 0) {
+                orgs[i].coolDown--;
             }
-            if(org[i].matureTime && org[i].matureTime>0){
-                org[i].matureTime--;
+            if (orgs[i].matureTime && orgs[i].matureTime > 0) {
+                orgs[i].matureTime--;
             }
         }
         //hunger and lastMate
-        if(org[i].hunger<100){
-            org[i].hunger++;
-        }else{
+        if (orgs[i].hunger < 100) {
+            orgs[i].hunger++;
+        } else {
             //starvation!
-            org[i].hp--;
+            orgs[i].hp--;
         }
-        if(org[i].lastMate<100){
-            org[i].lastMate++;
+        if (orgs[i].lastMate < 100) {
+            orgs[i].lastMate++;
         }
         //movement!
-        if (getDist(org[i],org[org[i].targ])>org[i].vis){
-            //too far to fight/pred/mate, so move
+        if (orgs[i].type != 'prod') {
+            if (getDist(orgs[i], orgs[orgs[i].targ]) > orgs[i].vis || !orgs[i].targ) {
+                //too far to fight/pred/mate, so move
+                //first, check pos of target.
+                if (orgs[i].targ) {
+                    //has a target
+                    if (orgs[i].pos.x > orgs[orgs[i].targ].pos.x) {
+                        orgs[i].vel.dx = -1;
+                    } else {
+                        orgs[i].vel.dx = 1;
+                    }
+
+                    if (orgs[i].pos.y > orgs[orgs[i].targ].pos.y) {
+                        orgs[i].vel.dy = -1;
+                    } else {
+                        orgs[i].vel.dy = 1;
+                    }
+
+                    if (orgs[i].pos.z > orgs[orgs[i].targ].pos.z) {
+                        orgs[i].vel.dz = -1;
+                    } else {
+                        orgs[i].vel.dz = 1;
+                    }
+                }
+                //next, boundaries
+                if ((orgs[i].pos.x + orgs[i].vel.dx) > w || (orgs[i].pos.x + orgs[i].vel.dx) < 0) {
+                    orgs[i].vel.dx = -1 * orgs[i].vel.dx
+                }
+
+                if ((orgs[i].pos.y + orgs[i].vel.dy) > h || (orgs[i].pos.y + orgs[i].vel.dy) < 0) {
+                    orgs[i].vel.dy = -1 * orgs[i].vel.dy
+                }
+
+                if ((orgs[i].pos.z + orgs[i].vel.dz) > d || (orgs[i].pos.z + orgs[i].vel.dz) < 0) {
+                    orgs[i].vel.dz = -1 * orgs[i].vel.dz
+                }
+                orgs[i].pos.x += orgs[i].dx;
+                orgs[i].pos.y += orgs[i].dy;
+                orgs[i].pos.z += orgs[i].dz;
+            } else {
+                //close enough for interaction
+                if (orgs[i].mode == 'pred') {
+                    orgs[i].pred();
+                } else if (orgs[i].mode == 'mate') {
+                    var sx = orgs[i].mate();
+                    if (sx == 'b') {
+                        numOrgs++;
+                    }
+                } else if (orgs[i].mode == 'wander' && orgs[orgs[i].targ].type != 'prod') {
+                    orgs[i].fight();
+                }
+                //else do nothing (near a plant, but not 'hungry')
+            }
+        } else {
+            //plants have their own behaviors, since they do not target and they do not mate.
         }
     }
+    itNum++;
+    console.log('iteration number:', itNum)
 };
 
-var mainTimer;//main timer. Srsly, I'm not mincing variable names here, folks.
+var mainTimer; //main timer. Srsly, I'm not mincing variable names here, folks.
+
+//first round is done with a timer to see how long it takes. this is used to prevent one 'round' from overtaking another (i.e., the functions for round 30 starting before the functions for round 29 are finished.)
+var startMe = function() {
+    var startTime = new Date().getTime();
+    step();
+    var endTime = new Date().getTime();
+    timeDelta = (endTime - startTime) > 50 ? (endTime - startTime) : 50;
+    console.log('frame rate: 1 frame every', timeDelta, 'ms.')
+    mainTimer = setInterval(function() {
+        step();
+    }, timeDelta * 1.5);
+}
 
 var setupBox = function() {
     var v = 80;

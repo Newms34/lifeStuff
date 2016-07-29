@@ -114,3 +114,9 @@ body {
     background:#0056A2;
     border:2px outset #0056A2;
 }
+.frontin{
+    position:fixed;
+    z-index: 995;
+    width:100%;
+    height:100%;
+}
