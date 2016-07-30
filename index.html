@@ -10,8 +10,9 @@
 
 <body>
     <div class='switchBtn' onclick='window.location.assign("oldIndex.html")'>&leftarrow; Old Version!</div>
-    <div class='frontin offset-md-3'>
-        <div class='panel panel-success col-md-8' style='padding:2px;left:10%;max-height:95%;' ng-app='pickerApp' ng-controller='pik-cont' ng-show='pikActive'>
+    <div ng-app='pickerApp' ng-controller='pik-cont' class='frontin offset-md-3' id='angbit'>
+        <div>{{orgNum}}</div>
+        <div class='panel panel-success col-md-8' style='padding:2px;left:10%;max-height:95%;' ng-show='pikActive'>
             <div class='panel-heading center'>
                 <h2>Customize Your Ecosystem</h2>
             </div>

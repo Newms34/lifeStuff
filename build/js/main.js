@@ -47,13 +47,13 @@ var orgs = [],
 var orgConst = function(x, y, z, spec, type, sex) {
     this.pos = {
         x: x,
-        y: y,
-        z: type == 'prod' ? h : z
+        y: type == 'prod' ? h : y,
+        z:  z
     };
     this.vel = {
         dx: 1,
-        dy: 1,
-        dz: type == 'prod' ? 0 : 1,
+        dy: type == 'prod' ? 0 : 1,
+        dz:1
     };
     this.hp = 300;
     this.id = Math.floor(Math.random() * 9999999999999).toString(32); //generate a random id for this org for tracking
@@ -140,6 +140,11 @@ orgConst.prototype.pickNewTarg = function() {
     //pick a target
     this.targ = Math.floor(Math.random() * orgs.length);
     var validMatch = false;
+    var numTries=0;
+    if (!orgs.length||orgs.length==1){
+        this.targ==null;
+        return false;
+    }
     while (orgs[this.targ].id == this.id || (orgs[this.targ].type == 'prod' && this.type == 'carni') && validMatch) {
         //keep repicking until we have a legitimate match:
         //must not be the same organism (cannot target self), and predators do not interact with plants
@@ -152,6 +157,11 @@ orgConst.prototype.pickNewTarg = function() {
             validMatch = true;
         }
         this.targ = Math.floor(Math.random() * orgs.length);
+        numTries++;
+        if (numTries>orgs.length-1){
+            return false;
+        }
+
     }
     console.log(this.spec, this.id, 'picked', orgs[this.targ].spec, orgs[this.targ].id);
 };
@@ -185,6 +195,8 @@ var die = function(n) {
     //kill org. Remove from list of orgs (objs), and element from DOM. Also, run thur other orgs, left-shift ones AFTER this org, and redo targs (so no one is targetting an invalid targ)
     //this function is run for EVERY organism with hp <= 0 at every tick
     console.log(orgs[n], 'died!');
+    var creature = orgs[n].sex==1?'male':'female';
+    creature += ' '+orgs[n].spec+orgStats[orgs[n].spec].img;
     var theId = orgs[n].id;
     orgs.splice(n, 1);
     var orgDivs = $('.one-org');
@@ -205,6 +217,14 @@ var die = function(n) {
             orgs[i].targ--;
         }
     }
+    var scp = angular.element(document.querySelector('#angbit')).scope();
+    scp.$apply(function(){
+        scp.orgNum = orgs.length;
+    });
+    if(orgs.length<1){
+        clearInterval(mainTimer);
+        bootbox.alert('Your ecosystem has crashed! The last survivor was a '+creature+'.');
+    }
 };
 var birth = function(f, m) {
     //make a new org from Father and Mother
@@ -212,7 +232,7 @@ var birth = function(f, m) {
     var newBeast = new orgConst(f.x, f.y, zee, f.spec, f.type, Math.floor(Math.random() * 2) + 1);
     orgs.push(newBeast);
     var newOrgDiv = document.createElement('div');
-    var gend = newBeast.sex == 1 ? '♂' : '♀';
+    var gend = newBeast.sex == 1 ? 'SLASHu2642' : 'SLASHu2640';
     newOrgDiv.className = 'one-org';
     newOrgDiv.innerHTML = orgStats[newBeast.spec].img + gend;
     newOrgDiv.style.left = x + 'px';
@@ -220,6 +240,10 @@ var birth = function(f, m) {
     newOrgDiv.style.transform = 'translateZ(' + z + 'px)';
     newOrgDiv.id = newBeastie.id;
     $('#field').append(newOrgDiv);
+    var scp = angular.element(document.querySelector('#angbit')).scope();
+    scp.$apply(function(){
+        scp.orgNum = orgs.length;
+    })
 };
 //get dist btwn two orgs
 var getDist = function(o, t) {
@@ -335,7 +359,7 @@ var step = function() {
                 //else near a plant, but not 'hungry', so pick new targ
                 orgs[i].pickNewTarg();
             }
-        } else if (Math.random() > 0.99) {
+        } else if (Math.random() > 0.995) {
             //plants have their own behaviors, since they do not target and they do not mate.
             //note that we completely bypass the mating fn here.
             birth(orgs[i], null);
