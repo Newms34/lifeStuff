@@ -1,6 +1,7 @@
 var app = angular.module('pickerApp', []).controller('pik-cont', function($scope) {
     $scope.orgs = [];
     $scope.pikActive = true;
+    $scope.orgNum = 0;
     for (var tax in orgStats) {
         var newOrg = {
             name: tax,
@@ -89,22 +90,23 @@ var app = angular.module('pickerApp', []).controller('pik-cont', function($scope
                 orgs.push(newBeastie);
                 //now create the div el!
                 var newOrgDiv = document.createElement('div');
-                var gend = newBeastie.sex==1?'♂':'♀';
+                var gend = newBeastie.sex == 1 ? 'SLASHu2642' : 'SLASHu2640';
                 newOrgDiv.className = 'one-org';
-                newOrgDiv.innerHTML = $scope.orgs[t].img+gend;
+                newOrgDiv.innerHTML = $scope.orgs[t].img + gend;
                 newOrgDiv.style.left = x + 'px';
                 newOrgDiv.style.top = y + 'px';
                 newOrgDiv.style.transform = 'translateZ(' + z + 'px)';
                 newOrgDiv.id = newBeastie.id;
                 $('#field').append(newOrgDiv);
+                $scope.orgNum++
             }
         }
         console.log('ORGS', orgs);
         $scope.pikActive = false;
-        if (orgs.length && orgs.length>0) {
+        if (orgs.length && orgs.length > 0) {
             startMe();
-        }else{
-        	$scope.$digest();
+        } else {
+            $scope.$digest();
         }
     };
 });

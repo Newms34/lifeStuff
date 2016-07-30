@@ -20,7 +20,7 @@ gulp.task('scripts', function() {
         .pipe(concat('all.js'))
         .pipe(gulp.dest('/js'))
         .pipe(rename('main.min.js'))
-        .pipe(uglify({mangle:false}))
+        // .pipe(uglify({mangle:false}))
         .pipe(replace('SLASHu','\\u'))
         .pipe(gulp.dest('js'));
 });
