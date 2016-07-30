@@ -11,7 +11,10 @@
 <body>
     <div class='switchBtn' onclick='window.location.assign("oldIndex.html")'>&leftarrow; Old Version!</div>
     <div ng-app='pickerApp' ng-controller='pik-cont' class='frontin offset-md-3' id='angbit'>
-        <div>{{orgNum}}</div>
+        <div class='col-md-8' style='left:10%;'>World Population:{{orgNum}}
+            <span ng-show='orgDelt==1'>&uparrow;</span>
+            <span ng-show='orgDelt==-1'>&downarrow;</span>
+        </div>
         <div class='panel panel-success col-md-8' style='padding:2px;left:10%;max-height:95%;' ng-show='pikActive'>
             <div class='panel-heading center'>
                 <h2>Customize Your Ecosystem</h2>

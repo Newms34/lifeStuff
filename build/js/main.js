@@ -220,6 +220,7 @@ var die = function(n) {
     var scp = angular.element(document.querySelector('#angbit')).scope();
     scp.$apply(function(){
         scp.orgNum = orgs.length;
+        scp.orgDelt = -1;
     });
     if(orgs.length<1){
         clearInterval(mainTimer);
@@ -243,6 +244,7 @@ var birth = function(f, m) {
     var scp = angular.element(document.querySelector('#angbit')).scope();
     scp.$apply(function(){
         scp.orgNum = orgs.length;
+        scp.orgDelt = 1;
     })
 };
 //get dist btwn two orgs

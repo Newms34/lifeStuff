@@ -2,6 +2,7 @@ var app = angular.module('pickerApp', []).controller('pik-cont', function($scope
     $scope.orgs = [];
     $scope.pikActive = true;
     $scope.orgNum = 0;
+    $scope.orgDelt = 0;
     for (var tax in orgStats) {
         var newOrg = {
             name: tax,
