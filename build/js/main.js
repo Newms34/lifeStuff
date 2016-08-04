@@ -68,6 +68,8 @@ var orgConst = function(x, y, z, spec, type, sex) {
     this.mode = 'none';
     this.coolDown = 0; //set to 100 after pred or mate event. Forces org to wait before another 'activity'. when it reaches 0, choose mode pred or mode mate.
     this.lastMate = 0;
+    this.scareTimer = null;
+    this.targetters = {};//who's targetting this? Used for mating, but more for predation and the 'flee' function
     this.mateTimerMax = orgStats[this.spec].gestation; //this will be made dynamic later (for R-selection vs. K-selection). It determines the period between matings (max)
     this.hunger = 0; //if this reaches 100, it no longer increases (can be lowered obvsly), but instead subtracts 0.5 from HP per turn (due to starvation)
 };
@@ -96,7 +98,6 @@ orgConst.prototype.pred = function() {
             console.log(this.spec, this.id, 'attempted to prey on', orgs[this.targ].spec, orgs[this.targ].id, 'but failed!');
         }
     }
-    this.mode = 'none';
     this.coolDown = 100;
     this.pickNewTarg();
 };
@@ -108,9 +109,45 @@ orgConst.prototype.mate = function() {
         birth(this, orgs[this.targ]);
         return 'b';
     }
-    this.mode = 'none';
     this.coolDown = 100;
     this.pickNewTarg();
+};
+orgConst.prototype.fleeCheck = function(){
+    //fly, you fools!
+    //check for flees?
+    var chaserInRange=false;//false if no chaser in range. Otherwise, this is the id of the chaser.
+    var closest=Number.POSITIVE_INFINITY;
+    var chaseIds = Object.keys(this.targetters);
+    for(var i=0;i<chaseIds.length;i++){
+        var preda = findOrgById(chaseIds[i]),
+        distToPred = getDist(this,pred);
+        if (preda.mode=='pred' && distToPred<closest && distToPred<this.vis){
+            //targetter is a predator and is the closest predator and is in 'visible' range
+            chaserInRange=pred.id;
+            closest = distToPred;
+        }
+    }
+    if (chaserInRange && !this.scareTimer){
+        this.scareTimer = 100;
+        this.mode='flee';
+    }
+    else if (chaserInRange){
+        if(this.pos.x>pred.pos.x){
+            this.vel.dx=1;
+        }else{
+            this.vel.dx=-1;
+        }
+        if(this.pos.y>pred.pos.y){
+            this.vel.dy=1;
+        }else{
+            this.vel.dy=-1;
+        }
+        if(this.pos.z>pred.pos.z){
+            this.vel.dz=1;
+        }else{
+            this.vel.dz=-1;
+        }
+    }
 };
 orgConst.prototype.fight = function() {
     if (getDist(this, orgs[this.targ]) < this.vis && this.hp) {
@@ -132,17 +169,22 @@ orgConst.prototype.fight = function() {
             console.log('Fight between', this.spec, this.id, 'and', orgs[this.targ].spec, orgs[this.targ].id, 'with no injuries');
         }
     }
-    this.mode = 'none';
     this.coolDown = 100;
     this.pickNewTarg();
 };
 orgConst.prototype.pickNewTarg = function() {
     //pick a target
+    if(orgs[this.targ] && orgs[this.targ].targetters[this.id]){
+        //just interacted, target still exists. remove this from target's list
+        delete orgs[this.targ].targetters[this.id];
+        //remove this from the list of orgs targetting this organism's old target
+    }
     this.targ = Math.floor(Math.random() * orgs.length);
     var validMatch = false;
     var numTries=0;
     if (!orgs.length||orgs.length==1){
-        this.targ==null;
+        //either no more orgs, or this is the last org. So no more targs!
+        this.targ=null;
         return false;
     }
     while (orgs[this.targ].id == this.id || (orgs[this.targ].type == 'prod' && this.type == 'carni') && validMatch) {
@@ -163,7 +205,10 @@ orgConst.prototype.pickNewTarg = function() {
         }
 
     }
-    console.log(this.spec, this.id, 'picked', orgs[this.targ].spec, orgs[this.targ].id);
+    this.mode = 'none';
+    // console.log(this.spec, this.id, 'picked', orgs[this.targ].spec, orgs[this.targ].id);
+    //target selected. Add prop to target obj
+    orgs[this.targ].targetter[this.id]='none';
 };
 orgConst.prototype.pickMode = function() {
     //this method picks the mode of the target, depending on how hungry the organism is and how recently its mated
@@ -189,6 +234,14 @@ orgConst.prototype.pickMode = function() {
         }
     } else if (Math.random() > this.hunger / 100) {
         this.mode = 'pred';
+    }
+    orgs[this.targ].targetter[this.id]=this.mode;
+};
+var findOrgById = function(n){
+    for (var q=0;q<orgs.length;q++){
+        if (orgs[q].id==n){
+            return orgs[q];
+        }
     }
 };
 var die = function(n) {
@@ -245,14 +298,14 @@ var birth = function(f, m) {
     scp.$apply(function(){
         scp.orgNum = orgs.length;
         scp.orgDelt = 1;
-    })
+    });
 };
 //get dist btwn two orgs
 var getDist = function(o, t) {
     var a = Math.abs(o.pos.x - t.pos.x);
     var b = Math.abs(o.pos.y - t.pos.y);
     var c = Math.abs(o.pos.z - t.pos.z);
-    return Math.floor(Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)));
+    return Math.floor(Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)+ Math.pow(c, 2)));
 };
 
 //TESTING STUFF-------------
@@ -301,9 +354,11 @@ var step = function() {
         //movement!
         if (orgs[i].type != 'prod') {
             if (!orgs[i].targ || getDist(orgs[i], orgs[orgs[i].targ]) > orgs[i].vis) {
-                //too far to fight/pred/mate, so move
-                //first, check pos of target.
-                if (orgs[i].targ) {
+                //too far to fight/pred/mate on THIS org's target, so move
+                //first, check flee status (fleeing takes precidence over predation/fighting/mating)
+                orgs[i].fleeCheck();
+                //next, check pos of target.
+                if (orgs[i].targ && orgs[i].mode!=='flee') {
                     //has a target
                     if (orgs[i].pos.x > orgs[orgs[i].targ].pos.x) {
                         orgs[i].vel.dx = -1;
@@ -321,6 +376,12 @@ var step = function() {
                         orgs[i].vel.dz = -1;
                     } else {
                         orgs[i].vel.dz = 1;
+                    }
+                }else if(orgs[i].mode=='flee'){
+                    if(orgs[i].scareTimer && orgs[i].scareTimer>0){
+                        orgs[i].scareTimer--;
+                    }else{
+                        orgs[i].mode='none';//no more fear! set back to default mode
                     }
                 }
                 //next, boundaries

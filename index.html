@@ -61,6 +61,17 @@
                         </tbody>
                     </table>
                     <hr/>
+                    <h4>Food Web</h4>
+                    <div id='graffDiv'></div>
+                    <hr/>
+                    <h4>Trophic Pyramid</h4>
+                    <div class='center' style='background:black;padding:5px'>
+                    <div class='trophBar' style='background:#933;width:{{((100*tert)/maxOrgs)||0.25}}%'>Tertiary Consumers</div>
+                    <div class='trophBar' style='background:#993;width:{{((100*sec)/maxOrgs)||0.25}}%'>Secondary Consumers</div>
+                    <div class='trophBar' style='background:#339;width:{{((100*prim)/maxOrgs)||0.25}}%'>Primary Consumers</div>
+                    <div class='trophBar' style='background:#393;width:{{((100*prods)/maxOrgs)||0.25}}%'>Producers</div>
+                    </div>
+                    <hr/>
                     <div class='col-md-6 center'>
                         <button class='btn btn-primary' ng-click='makeWorld();' type='submit'>Make It So!</button>
                     </div>
@@ -87,6 +98,7 @@
     <script src="https://code.jquery.com/jquery-3.0.0.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
     <script src="./js/main.min.js"></script>
 </body>
 

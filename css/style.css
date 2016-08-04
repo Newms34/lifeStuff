@@ -133,3 +133,32 @@ body {
     width:5px;
     height:5px;
 }
+
+.link {
+  fill: none;
+  stroke: #009;
+  stroke-width: 1.5px;
+}
+
+circle {
+  fill: #ccc;
+  opacity:.5;
+  stroke: #333;
+  stroke-width: 1.5px;
+}
+
+text {
+  font: 14px sans-serif;
+  pointer-events: none;
+  text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+}
+.trophBar{
+    height:50px;
+    width:100px;
+    background:#339;
+    color:#fff;
+    margin-left:auto;
+    margin-right:auto;
+    margin-bottom:2px;
+    overflow:visible;
+}

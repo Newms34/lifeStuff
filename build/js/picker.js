@@ -23,10 +23,8 @@ var app = angular.module('pickerApp', []).controller('pik-cont', function($scope
     $scope.checkOrgValid = function(o) {
         o.warns.pairs = false;
         o.warns.snaks = false;
-        if (o.type == 'prod') {
+        if (o.type != 'prod') {
             //plants dont have the pairs problem or the eating problem
-            return false;
-        } else {
             if (o.quant == 1) {
                 o.warns.pairs = true;
             }
@@ -46,7 +44,128 @@ var app = angular.module('pickerApp', []).controller('pik-cont', function($scope
                     $scope.orgs[t].warns.snaks = false;
                 }
             }
+        }
+        $scope.doD3Things();
+    };
+    $scope.doD3Things = function() {
+        //first, clear the d3 stuff
+        $('#graffSvg').remove();
+        var links = [];
+        var nodes = {};
+        var cols = {
+            'ps': '#f00',
+            'hp': '#fc0',
+            'oh': '#ff0',
+            'oo': '#cf0',
+            'oc': '#0f0',
+            'ch': '#0fc',
+            'co': '#0ff',
+            'cc': '#0cf'
+        };
+        for (var i = 0; i < $scope.orgs.length; i++) {
+            //for each org, find which of its
+            if ($scope.orgs[i].type != 'prod') {
+                for (var j = 0; j < $scope.orgs[i].eats.length; j++) {
+                    if ($scope.orgs[i].quant && $scope.findOrg($scope.orgs[i].eats[j]).quant) {
+                        links.push({
+                            source: $scope.orgs[i].name,
+                            target: $scope.findOrg($scope.orgs[i].eats[j]).name,
+                            num: $scope.orgs[i].quant,
+                            type: $scope.orgs[i].type[0] + $scope.findOrg($scope.orgs[i].eats[j]).type[0]
+                        });
+                    }
+                }
+            } else {
+                if ($scope.orgs[i].quant) {
+                    links.push({
+                        source: $scope.orgs[i].name,
+                        target: 'sun',
+                        num: $scope.orgs[i].quant,
+                        type: 'ps'
+                    });
+                }
+            }
+        }
+        links.forEach(function(link) {
+            link.source = nodes[link.source] || (nodes[link.source] = {
+                name: link.source
+            });
+            link.target = nodes[link.target] || (nodes[link.target] = {
+                name: link.target
+            });
+        });
 
+        var graffwidth = 0.95 * $('#angbit .panel').width(),
+            graffheight = 0.95 * $('#angbit .panel').height(),
+            force = d3.layout.force()
+            .nodes(d3.values(nodes))
+            .links(links)
+            .size([graffwidth, graffheight])
+            .linkDistance(260)
+            .charge(-100)
+            .on("tick", tick)
+            .start(),
+            svg = d3.select("#graffDiv").append("svg")
+            .attr("width", graffwidth)
+            .attr("height", graffheight)
+            .attr("id", "graffSvg"),
+            path = svg.append("g").selectAll("path")
+            .data(force.links())
+            .enter().append("path")
+            .attr("class", function(d) {
+                return 'link';
+            })
+            .attr("style", function(d) {
+                return 'stroke:' + cols[d.type];
+            })
+            .attr("marker-end", function(d) {
+                return "url(#arrow)";
+            }),
+            circle = svg.append("g").selectAll("circle")
+            .data(force.nodes())
+            .enter().append("circle")
+            .attr("r", function(d) {
+                var rad = $scope.findOrg(d.name) && $scope.findOrg(d.name).quant < 40 ? $scope.findOrg(d.name).quant : 40;
+                return rad;
+            })
+            .call(force.drag),
+            text = svg.append("g").selectAll("text")
+            .data(force.nodes())
+            .enter().append("text")
+            .attr("x", 0)
+            .attr("y", ".31em")
+            .text(function(d) {
+                if (orgStats[d.name]) {
+                    return orgStats[d.name].img + d.name;
+                }
+                return 'SLASHu2600sun';
+            });
+
+        function tick() {
+            path.attr("d", linkArc);
+            circle.attr("transform", transGraff);
+            text.attr("transform", transGraff);
+        }
+
+        function linkArc(d) {
+            var dx = d.target.x - d.source.x,
+                dy = d.target.y - d.source.y,
+                dr = Math.sqrt(dx * dx + dy * dy);
+            return "M" + d.source.x + "," + d.source.y + "A" + dr + "," + dr + " 0 0,1 " + d.target.x + "," + d.target.y;
+        }
+
+        function transGraff(d) {
+            return "translate(" + d.x + "," + d.y + ")";
+        }
+        console.log(links);
+        $scope.pyramid();
+    };
+    $scope.findOrg = function(n) {
+    	//find a particular organism by name and return it
+        for (var q = 0; q < $scope.orgs.length; q++) {
+            if ($scope.orgs[q].name == n) {
+                return $scope.orgs[q];
+            }
         }
     };
     $scope.resetNums = function() {
@@ -57,6 +176,7 @@ var app = angular.module('pickerApp', []).controller('pik-cont', function($scope
                 snaks: false
             };
         }
+        $('#graffSvg').remove();
     };
     $scope.makeWorld = function() {
         var hasOrg = false;
@@ -99,7 +219,7 @@ var app = angular.module('pickerApp', []).controller('pik-cont', function($scope
                 newOrgDiv.style.transform = 'translateZ(' + z + 'px)';
                 newOrgDiv.id = newBeastie.id;
                 $('#field').append(newOrgDiv);
-                $scope.orgNum++
+                $scope.orgNum++;
             }
         }
         console.log('ORGS', orgs);
@@ -110,10 +230,66 @@ var app = angular.module('pickerApp', []).controller('pik-cont', function($scope
             $scope.$digest();
         }
     };
+    $scope.prods=0;
+    $scope.prim=0;
+    $scope.sec=0;
+    $scope.tert=0;
+    $scope.maxOrgs = 0;
+    $scope.pyramid = function() {
+        //number of consumers of each (generalized) trophic level
+        $scope.prods=0;
+    	$scope.prim=0;
+    	$scope.sec=0;
+    	$scope.tert=0;
+    	$scope.maxOrgs = 0;
+
+        //NEED TO REDEFINE SEC AND TERT
+        //idealy, each successive number above should be 1/10 of the previous. So, 1000 prods, 100 prims, 10 secs, and 1 tert.
+        //defs: producer: plant. prim: only eats herbis. sec: only eats animals that eat herbis. tert: other
+        for (var i = 0; i < $scope.orgs.length; i++) {
+            if ($scope.orgs[i].type == 'prod') {
+                $scope.prods += $scope.orgs[i].quant;
+                $scope.maxOrgs = $scope.maxOrgs>$scope.prods? $scope.maxOrgs: $scope.prods;
+            } else {
+                //not a producer, so we need to determine what this eats.
+                var isHerbi = true;
+                for (var j = 0; j < $scope.orgs[i].eats.length; j++) {
+                    if (orgStats[$scope.orgs[i].eats[j]].type != 'prod') {
+                        //eats something other than plants, so NOT a herbivore (primary producer)
+                        isHerbi = false;
+                        break;
+                    }
+                }
+                if (isHerbi) {
+                    $scope.prim += $scope.orgs[i].quant;
+                    $scope.maxOrgs = $scope.maxOrgs>$scope.prim? $scope.maxOrgs: $scope.prim;
+                } else {
+                    //not primary consumer
+                    var foundEater = false;
+                    var menus = Object.keys(fl);
+                    for (j = 0; j < menus.length; j++) {
+                        if(menus[j]!=$scope.orgs[i].name && fl[menus[j]].indexOf($scope.orgs[i].name)!=-1){
+                        	foundEater=true;
+                        	break;
+                        	//found something that eats this, so this is NOT an apex pred
+                        }
+                    }
+                    if (foundEater) {
+                        $scope.sec += $scope.orgs[i].quant;
+                        $scope.maxOrgs = $scope.maxOrgs>$scope.sec? $scope.maxOrgs: $scope.sec;
+                    } else {
+                        $scope.tert += $scope.orgs[i].quant;
+                        $scope.maxOrgs = $scope.maxOrgs>$scope.tert? $scope.maxOrgs: $scope.tert;
+                    }
+
+                }
+            }
+        }
+    };
 });
 app.filter('typeViewer', function() {
     var types = {
-        'omni': 'Omnivore: Eats both plants an animals',
+        'omni': 'Omnivore: Eats both plants and animals',
         'pred': 'Predator (carnivore): Eats animals',
         'herbi': 'Herbivore: Eats plants',
         'prod': 'Producer: Produces energy from sun'
