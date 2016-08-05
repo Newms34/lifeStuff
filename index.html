@@ -21,57 +21,60 @@
             </div>
             <div class='panel-body' style='max-height: 80vh;overflow-y:scroll;'>
                 <form>
-                    <h4>Organism Statistics</h4>
-                    <table class='table table-striped' style='display:block;overflow:scroll;max-height: 40vh'>
-                        <thead>
-                            <tr>
-                                <th>Icon</th>
-                                <th>Name</th>
-                                <th>Number to Include</th>
-                                <th>Gestation Time (days)</th>
-                                <th>Time to Sexual Maturity (weeks)</th>
-                                <th>Type</th>
-                                <th>Eats</th>
-                                <th>&nbsp;</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr ng-repeat='o in orgs'>
-                                <td style='font-size:x-large' ng-style='o.quant>0?{"color":"black"}:{"color":"grey"};'>{{o.img}}</td>
-                                <td>{{o.name}}</td>
-                                <th>
-                                    <input type='number' min='0' max='500' ng-model='o.quant' ng-change='checkOrgValid(o)'>
-                                </th>
-                                <td>{{o.gestation}}</td>
-                                <td>{{o.timeToMature}}</td>
-                                <td>{{o.type|typeViewer}}</td>
-                                <td style='cursor:pointer;' ng-click='o.active?o.active=false:o.active=true;'>{{o.active==false?'Click to Toggle':''}}
-                                    <table ng-show='o.active==true && o.eats!="prod"'>
-                                        <tr ng-repeat='food in o.eats track by $index'>
-                                            <td>{{food}}</td>
-                                        </tr>
-                                    </table>
-                                    <span ng-show='o.active && o.eats=="prod"'>(This organism is a primary producer)</span>
-                                </td>
-                                <td>
-                                    <div ng-show='o.warns.pairs==true' class='bg-danger'>Warning: There are not enough members of the {{o.name}} species to form mating pairs!</div>
-                                    <br/>
-                                    <div ng-show='o.warns.snaks==true' class='bg-danger'>Warning: The {{o.name}} species does not have any available food organisms! This means it <em>will</em> starve!</div>&nbsp;</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <hr/>
-                    <h4>Food Web</h4>
-                    <div id='graffDiv'></div>
-                    <hr/>
-                    <h4>Trophic Pyramid</h4>
-                    <div class='center' style='background:black;padding:5px'>
-                    <div class='trophBar' style='background:#933;width:{{((100*tert)/maxOrgs)||0.25}}%'>Tertiary Consumers</div>
-                    <div class='trophBar' style='background:#993;width:{{((100*sec)/maxOrgs)||0.25}}%'>Secondary Consumers</div>
-                    <div class='trophBar' style='background:#339;width:{{((100*prim)/maxOrgs)||0.25}}%'>Primary Consumers</div>
-                    <div class='trophBar' style='background:#393;width:{{((100*prods)/maxOrgs)||0.25}}%'>Producers</div>
+                    <div ng-class="{'hide-me-box':orgListBox==false}">
+                        <h4>Organism Statistics <span class='box-toggle' ng-show='orgListBox==false' ng-click='orgListBox=true'>&#128065;</span><span class='box-toggle' ng-show='orgListBox==true' ng-click='orgListBox=false'>&#10005;</span></h4>
+                        <table class='table table-striped' style='display:block;overflow:scroll;max-height: 40vh'>
+                            <thead>
+                                <tr>
+                                    <th>Icon</th>
+                                    <th>Name</th>
+                                    <th>Number to Include</th>
+                                    <th>Gestation Time (days)</th>
+                                    <th>Time to Sexual Maturity (weeks)</th>
+                                    <th>Type</th>
+                                    <th>Eats</th>
+                                    <th>&nbsp;</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat='o in orgs'>
+                                    <td style='font-size:x-large' ng-style='o.quant>0?{"color":"black"}:{"color":"grey"};'>{{o.img}}</td>
+                                    <td>{{o.name}}</td>
+                                    <th>
+                                        <input type='number' min='0' max='500' ng-model='o.quant' ng-change='checkOrgValid(o)'>
+                                    </th>
+                                    <td>{{o.gestation}}</td>
+                                    <td>{{o.timeToMature}}</td>
+                                    <td>{{o.type|typeViewer}}</td>
+                                    <td style='cursor:pointer;' ng-click='o.active?o.active=false:o.active=true;'>{{o.active==false?'Click to Toggle':''}}
+                                        <table ng-show='o.active==true && o.eats!="prod"'>
+                                            <tr ng-repeat='food in o.eats track by $index'>
+                                                <td>{{food}}</td>
+                                            </tr>
+                                        </table>
+                                        <span ng-show='o.active && o.eats=="prod"'>(This organism is a primary producer)</span>
+                                    </td>
+                                    <td>
+                                        <div ng-show='o.warns.pairs==true' class='bg-danger'>Warning: There are not enough members of the {{o.name}} species to form mating pairs!</div>
+                                        <br/>
+                                        <div ng-show='o.warns.snaks==true' class='bg-danger'>Warning: The {{o.name}} species does not have any available food organisms! This means it <em>will</em> starve!</div>&nbsp;</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <hr/>
+                    <div ng-class="{'hide-me-box':trophMap==false}">
+                        <h4>Food Web<span class='box-toggle' ng-show='trophMap==false' ng-click='trophMap=true'>&#128065;</span><span class='box-toggle' ng-show='trophMap==true' ng-click='trophMap=false'>&#10005;</span></h4>
+                        <div id='graffDiv'></div>
+                    </div>
+                    <div ng-class="{'hide-me-box':trophPyr==false}">
+                        <h4>Trophic Pyramid<span class='box-toggle' ng-show='trophPyr==false' ng-click='trophPyr=true'>&#128065;</span><span class='box-toggle' ng-show='trophPyr==true' ng-click='trophPyr=false'>&#10005;</span></h4>
+                        <div class='center' style='background:black;padding:5px'>
+                            <div class='trophBar' style='background:#933;width:{{((100*tert)/maxOrgs)||0.25}}%'>Tertiary Consumers</div>
+                            <div class='trophBar' style='background:#993;width:{{((100*sec)/maxOrgs)||0.25}}%'>Secondary Consumers</div>
+                            <div class='trophBar' style='background:#339;width:{{((100*prim)/maxOrgs)||0.25}}%'>Primary Consumers</div>
+                            <div class='trophBar' style='background:#393;width:{{((100*prods)/maxOrgs)||0.25}}%'>Producers</div>
+                        </div>
+                    </div>
                     <div class='col-md-6 center'>
                         <button class='btn btn-primary' ng-click='makeWorld();' type='submit'>Make It So!</button>
                     </div>

@@ -35,27 +35,27 @@ WHAT NEEDS TO HAPPEN EACH ROUND:
 MAY NEED TO TIME FIRST ROUND FOR SPEED!
 */
 //Params
-var maxNum = 100;
 var orgs = [],
     w = $(window).width() - 10,
     h = $(window).height() - 10,
     d = w,
     timeDelta,
-    itNum = 0; //all orgs
+    itNum = 0,
+    hpMon = '<div class="hp-mon"><div class="hp-meter"></div></div>';
 
 //constructor
 var orgConst = function(x, y, z, spec, type, sex) {
     this.pos = {
         x: x,
         y: type == 'prod' ? h : y,
-        z:  z
+        z: z
     };
     this.vel = {
         dx: 1,
         dy: type == 'prod' ? 0 : 1,
-        dz:1
+        dz: 1
     };
-    this.hp = 300;
+    this.hp = 200;
     this.id = Math.floor(Math.random() * 9999999999999).toString(32); //generate a random id for this org for tracking
     this.type = type;
     this.spec = spec;
@@ -69,7 +69,7 @@ var orgConst = function(x, y, z, spec, type, sex) {
     this.coolDown = 0; //set to 100 after pred or mate event. Forces org to wait before another 'activity'. when it reaches 0, choose mode pred or mode mate.
     this.lastMate = 0;
     this.scareTimer = null;
-    this.targetters = {};//who's targetting this? Used for mating, but more for predation and the 'flee' function
+    this.targetters = {}; //who's targetting this? Used for mating, but more for predation and the 'flee' function
     this.mateTimerMax = orgStats[this.spec].gestation; //this will be made dynamic later (for R-selection vs. K-selection). It determines the period between matings (max)
     this.hunger = 0; //if this reaches 100, it no longer increases (can be lowered obvsly), but instead subtracts 0.5 from HP per turn (due to starvation)
 };
@@ -82,8 +82,8 @@ orgConst.prototype.pred = function() {
             //kill!
             //first, grab the current HP of targ, and add to pred
             this.hp += orgs[this.targ].hp;
-            if (this.hp > 100) {
-                this.hp = 100;
+            if (this.hp > 200) {
+                this.hp = 200;
             }
             console.log(this.spec, this.id, 'preyed on', orgs[this.targ].spec, orgs[this.targ].id, 'successfully!');
             orgs[this.targ].hp = 0; //set target hp to 0
@@ -112,40 +112,39 @@ orgConst.prototype.mate = function() {
     this.coolDown = 100;
     this.pickNewTarg();
 };
-orgConst.prototype.fleeCheck = function(){
+orgConst.prototype.fleeCheck = function() {
     //fly, you fools!
     //check for flees?
-    var chaserInRange=false;//false if no chaser in range. Otherwise, this is the id of the chaser.
-    var closest=Number.POSITIVE_INFINITY;
+    var chaserInRange = false; //false if no chaser in range. Otherwise, this is the id of the chaser.
+    var closest = Number.POSITIVE_INFINITY;
     var chaseIds = Object.keys(this.targetters);
-    for(var i=0;i<chaseIds.length;i++){
+    for (var i = 0; i < chaseIds.length; i++) {
         var preda = findOrgById(chaseIds[i]),
-        distToPred = getDist(this,pred);
-        if (preda.mode=='pred' && distToPred<closest && distToPred<this.vis){
+            distToPred = getDist(this, pred);
+        if (preda.mode == 'pred' && distToPred < closest && distToPred < this.vis) {
             //targetter is a predator and is the closest predator and is in 'visible' range
-            chaserInRange=pred.id;
+            chaserInRange = pred.id;
             closest = distToPred;
         }
     }
-    if (chaserInRange && !this.scareTimer){
+    if (chaserInRange && !this.scareTimer) {
         this.scareTimer = 100;
-        this.mode='flee';
-    }
-    else if (chaserInRange){
-        if(this.pos.x>pred.pos.x){
-            this.vel.dx=1;
-        }else{
-            this.vel.dx=-1;
+        this.mode = 'flee';
+    } else if (chaserInRange) {
+        if (this.pos.x > pred.pos.x) {
+            this.vel.dx = 1;
+        } else {
+            this.vel.dx = -1;
         }
-        if(this.pos.y>pred.pos.y){
-            this.vel.dy=1;
-        }else{
-            this.vel.dy=-1;
+        if (this.pos.y > pred.pos.y) {
+            this.vel.dy = 1;
+        } else {
+            this.vel.dy = -1;
         }
-        if(this.pos.z>pred.pos.z){
-            this.vel.dz=1;
-        }else{
-            this.vel.dz=-1;
+        if (this.pos.z > pred.pos.z) {
+            this.vel.dz = 1;
+        } else {
+            this.vel.dz = -1;
         }
     }
 };
@@ -174,17 +173,17 @@ orgConst.prototype.fight = function() {
 };
 orgConst.prototype.pickNewTarg = function() {
     //pick a target
-    if(orgs[this.targ] && orgs[this.targ].targetters[this.id]){
+    if (orgs[this.targ] && orgs[this.targ].targetters[this.id]) {
         //just interacted, target still exists. remove this from target's list
         delete orgs[this.targ].targetters[this.id];
         //remove this from the list of orgs targetting this organism's old target
     }
     this.targ = Math.floor(Math.random() * orgs.length);
     var validMatch = false;
-    var numTries=0;
-    if (!orgs.length||orgs.length==1){
+    var numTries = 0;
+    if (!orgs.length || orgs.length == 1) {
         //either no more orgs, or this is the last org. So no more targs!
-        this.targ=null;
+        this.targ = null;
         return false;
     }
     while (orgs[this.targ].id == this.id || (orgs[this.targ].type == 'prod' && this.type == 'carni') && validMatch) {
@@ -200,7 +199,7 @@ orgConst.prototype.pickNewTarg = function() {
         }
         this.targ = Math.floor(Math.random() * orgs.length);
         numTries++;
-        if (numTries>orgs.length-1){
+        if (numTries > orgs.length - 1) {
             return false;
         }
 
@@ -208,7 +207,7 @@ orgConst.prototype.pickNewTarg = function() {
     this.mode = 'none';
     // console.log(this.spec, this.id, 'picked', orgs[this.targ].spec, orgs[this.targ].id);
     //target selected. Add prop to target obj
-    orgs[this.targ].targetter[this.id]='none';
+    orgs[this.targ].targetter[this.id] = 'none';
 };
 orgConst.prototype.pickMode = function() {
     //this method picks the mode of the target, depending on how hungry the organism is and how recently its mated
@@ -235,11 +234,11 @@ orgConst.prototype.pickMode = function() {
     } else if (Math.random() > this.hunger / 100) {
         this.mode = 'pred';
     }
-    orgs[this.targ].targetter[this.id]=this.mode;
+    orgs[this.targ].targetter[this.id] = this.mode;
 };
-var findOrgById = function(n){
-    for (var q=0;q<orgs.length;q++){
-        if (orgs[q].id==n){
+var findOrgById = function(n) {
+    for (var q = 0; q < orgs.length; q++) {
+        if (orgs[q].id == n) {
             return orgs[q];
         }
     }
@@ -248,8 +247,8 @@ var die = function(n) {
     //kill org. Remove from list of orgs (objs), and element from DOM. Also, run thur other orgs, left-shift ones AFTER this org, and redo targs (so no one is targetting an invalid targ)
     //this function is run for EVERY organism with hp <= 0 at every tick
     console.log(orgs[n], 'died!');
-    var creature = orgs[n].sex==1?'male':'female';
-    creature += ' '+orgs[n].spec+orgStats[orgs[n].spec].img;
+    var creature = orgs[n].sex == 1 ? 'male' : 'female';
+    creature += ' ' + orgs[n].spec + orgStats[orgs[n].spec].img;
     var theId = orgs[n].id;
     orgs.splice(n, 1);
     var orgDivs = $('.one-org');
@@ -271,13 +270,14 @@ var die = function(n) {
         }
     }
     var scp = angular.element(document.querySelector('#angbit')).scope();
-    scp.$apply(function(){
+    scp.$apply(function() {
         scp.orgNum = orgs.length;
         scp.orgDelt = -1;
     });
-    if(orgs.length<1){
+    if (orgs.length < 1) {
         clearInterval(mainTimer);
-        bootbox.alert('Your ecosystem has crashed! The last survivor was a '+creature+'.');
+        bootbox.alert('Your ecosystem has crashed! The last survivor was a ' + creature + '.');
+        return false;
     }
 };
 var birth = function(f, m) {
@@ -288,14 +288,14 @@ var birth = function(f, m) {
     var newOrgDiv = document.createElement('div');
     var gend = newBeast.sex == 1 ? 'SLASHu2642' : 'SLASHu2640';
     newOrgDiv.className = 'one-org';
-    newOrgDiv.innerHTML = orgStats[newBeast.spec].img + gend;
+    newOrgDiv.innerHTML = orgStats[newBeast.spec].img + gend + hpMon;
     newOrgDiv.style.left = x + 'px';
     newOrgDiv.style.top = y + 'px';
     newOrgDiv.style.transform = 'translateZ(' + z + 'px)';
     newOrgDiv.id = newBeastie.id;
     $('#field').append(newOrgDiv);
     var scp = angular.element(document.querySelector('#angbit')).scope();
-    scp.$apply(function(){
+    scp.$apply(function() {
         scp.orgNum = orgs.length;
         scp.orgDelt = 1;
     });
@@ -305,7 +305,7 @@ var getDist = function(o, t) {
     var a = Math.abs(o.pos.x - t.pos.x);
     var b = Math.abs(o.pos.y - t.pos.y);
     var c = Math.abs(o.pos.z - t.pos.z);
-    return Math.floor(Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2)+ Math.pow(c, 2)));
+    return Math.floor(Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2) + Math.pow(c, 2)));
 };
 
 //TESTING STUFF-------------
@@ -321,6 +321,7 @@ var step = function() {
     var numOrgs = orgs.length;
     for (var i = 0; i < numOrgs; i++) {
         //death
+        var thisOrg = orgs[i].id;
         if (orgs[i].hp < 1) {
             die(i);
             numOrgs--;
@@ -340,12 +341,12 @@ var step = function() {
             }
         }
         //hunger and lastMate
-        if (orgs[i].type!='prod'){
+        if (orgs[i].type != 'prod') {
             if (orgs[i].hunger < 100) {
                 orgs[i].hunger++;
             } else {
                 //starvation!
-                orgs[i].hp--;
+                orgs[i].hp --;
             }
             if (orgs[i].lastMate < 100) {
                 orgs[i].lastMate++;
@@ -358,7 +359,7 @@ var step = function() {
                 //first, check flee status (fleeing takes precidence over predation/fighting/mating)
                 orgs[i].fleeCheck();
                 //next, check pos of target.
-                if (orgs[i].targ && orgs[i].mode!=='flee') {
+                if (orgs[i].targ && orgs[i].mode !== 'flee') {
                     //has a target
                     if (orgs[i].pos.x > orgs[orgs[i].targ].pos.x) {
                         orgs[i].vel.dx = -1;
@@ -377,11 +378,11 @@ var step = function() {
                     } else {
                         orgs[i].vel.dz = 1;
                     }
-                }else if(orgs[i].mode=='flee'){
-                    if(orgs[i].scareTimer && orgs[i].scareTimer>0){
+                } else if (orgs[i].mode == 'flee') {
+                    if (orgs[i].scareTimer && orgs[i].scareTimer > 0) {
                         orgs[i].scareTimer--;
-                    }else{
-                        orgs[i].mode='none';//no more fear! set back to default mode
+                    } else {
+                        orgs[i].mode = 'none'; //no more fear! set back to default mode
                     }
                 }
                 //next, boundaries
@@ -400,13 +401,12 @@ var step = function() {
                 orgs[i].pos.y += orgs[i].vel.dy;
                 orgs[i].pos.z += orgs[i].vel.dz;
                 //now move the div!
-                // console.log($('#'+orgs[i].id))
                 $('#' + orgs[i].id).css({
                     'left': orgs[i].pos.x + 'px',
                     'top': orgs[i].pos.y + 'px',
                     'transform': 'translateZ(' + orgs[i].pos.z + 'px)'
                 });
-                // $('#'+orgs[i].id).html(JSON.stringify(orgs[i]))
+                $('#' + orgs[i].id + ' .hp-meter').css('width', (100 * orgs[i] / 200) + '%');
             } else {
                 //close enough for interaction
                 if (orgs[i].mode == 'pred') {
@@ -417,6 +417,7 @@ var step = function() {
                         numOrgs++;
                     }
                 } else if (orgs[i].mode == 'wander' && orgs[orgs[i].targ].type != 'prod') {
+                    //the check to see if the target type is plant is necessary because we cannot really fight plants
                     orgs[i].fight();
                 }
                 //else near a plant, but not 'hungry', so pick new targ
@@ -427,10 +428,18 @@ var step = function() {
             //note that we completely bypass the mating fn here.
             birth(orgs[i], null);
         }
+        if (orgs[i].id == thisOrg) {
+            //org has not died due to bad predation or fight
+            $('#' + orgs[i].id).css({
+                'left': orgs[i].pos.x + 'px',
+                'top': orgs[i].pos.y + 'px',
+                'transform': 'translateZ(' + orgs[i].pos.z + 'px)'
+            });
+            $('#' + orgs[i].id + ' .hp-meter').css('width', (100 * orgs[i].hp / 200) + '%');
+        }
     }
     itNum++;
-    console.log(orgs[0].pos);
-    // console.log('iteration number:', itNum,'world pop:',orgs.length);
+    
 };
 
 var mainTimer; //main timer. Srsly, I'm not mincing variable names here, folks.

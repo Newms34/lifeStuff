@@ -17,7 +17,7 @@ body {
     height: 100%;
     filter: blur(5px);
     transform-style: preserve-3d;
-    animation: wobble 20s linear infinite;
+    transform: translateZ(20px)
 }
 
 .particle {
@@ -58,7 +58,7 @@ body {
     transform-style: preserve-3d;
     position: absolute;
     transform: translateZ(200px) rotateY(0deg);
-    animation: wobble 20s linear infinite;
+    transform: translateZ(20px)
 }
 
 #cyl {
@@ -81,20 +81,6 @@ body {
     position: absolute;
 }
 
-@keyframes wobble {
-    0% {
-        transform: translateZ(200px) rotateY(0deg);
-    }
-    25% {
-        transform: translateZ(200px) rotateY(5deg);
-    }
-    50% {
-        transform: translateZ(200px) rotateY(0deg);
-    }
-    75% {
-        transform: translateZ(200px) rotateY(-5deg);
-    }
-}
 
 .switchBtn{
     border-radius:5px;
@@ -130,8 +116,8 @@ body {
 }
 .one-org{
     position:absolute;
-    width:5px;
-    height:5px;
+    width:15px;
+    height:15px;
 }
 
 .link {
@@ -161,4 +147,32 @@ text {
     margin-right:auto;
     margin-bottom:2px;
     overflow:visible;
+}
+.hp-mon{
+    position:absolute;
+    display:block;
+    height:5px;
+    width:100%;
+    background:#555;
+}
+.hp-meter{
+    width:8px;
+    height:3px;
+    position:absolute;
+    top:1px;
+    background:#fcc;
+}
+.hide-me-box{
+    height:38px;
+    overflow:hidden;
+}
+.box-toggle{
+    cursor:pointer;
+    transition:.25s;
+}
+.box-toggle:hover{
+    font-size:larger;
+}
+#graffDiv{
+    height:300px;
 }
